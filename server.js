@@ -341,7 +341,7 @@ const generateRandomNumber = () => Math.floor(Math.random() * 1000000000);
 
 const Dropbox = require('dropbox').Dropbox;
 const fetch = require('isomorphic-fetch');
-const dbx = new Dropbox({ accessToken: 'sl.B6s4fYDY3VfvZ0iQb0nXL-lpCgktQJZCJuKev6tX4BpuU1s1CXHVaJXXnwYcYmBg1yAKK2I-wCQvV-7eBjfvggVbh3Vsv9zkRfMa191goKeyTppE-n1wO0-yPvY6AzW-VSCNTa4C_2ar', fetch: fetch });
+const dbx = new Dropbox({ accessToken: 'sl.B6voi12d3C7_1aVfwOrVozyv5AiYSFFEPCJgwuGNO9fpeJ-mcp2zd2goVcX6cSqQOe05DICmHvT6Oe-2gtcqdwvUH3osjnfFp9wsK6YUFwq7aAClbdpb1QKfxd9dEH7lz4h2zJqkM9SnOPEnpW74pDQ', fetch: fetch });
 
 
 app.post('/upload-product', upload.fields([
