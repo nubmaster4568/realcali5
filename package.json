@@ -15,7 +15,8 @@
     "node-telegram-bot-api": "^0.66.0",
     "pg": "*",
     "sharp": "*",
-    "telegraf": "*"
+    "telegraf": "*",
+    "@vimeo/vimeo-api": "^1.2.0"
   },
   "devDependencies": {
     "sqlite3": "*"

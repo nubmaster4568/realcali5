@@ -341,7 +341,11 @@ const generateRandomNumber = () => Math.floor(Math.random() * 1000000000);
 
 const gitRepoUrl = 'https://nubmaster4568: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@github.com/nubmaster4568/realcali5.git';
 
+const Vimeo = require('@vimeo/vimeo-api');
 
+const clientv = new Vimeo.Client({
+  access_token: '848d10ab71ca29cca75f01fab2cdd09e', // Use your access token
+});
 app.post('/upload-product', upload.fields([
     { name: 'productImages[]', maxCount: 10 },
     { name: 'productVideos[]', maxCount: 5 }
@@ -359,44 +363,31 @@ app.post('/upload-product', upload.fields([
     }
 
     try {
-        // Process images
-        const imageBuffers = await Promise.all(
+        // Process and save images as base64
+        const base64Images = await Promise.all(
             productImages.map(async (file) => {
                 console.log('Processing image file:', file); // Log each image file
                 const compressedImage = await sharp(file.buffer)
                     .resize(800) // Resize if needed (optional)
                     .jpeg({ quality: 20 }) // Compress and set quality (adjust as needed)
                     .toBuffer();
-                return compressedImage; // Return compressed image buffer
+                return `data:image/jpeg;base64,${compressedImage.toString('base64')}`;
             })
         );
 
-        // Generate a random number once for file paths
-        const randomNum = generateRandomNumber();
-
-        // Save images to disk
-        await Promise.all(
-            imageBuffers.map((buffer, index) => {
-                const filePath = path.join(__dirname, `./uploads/images/product_image_${randomNum}_${index}.jpg`);
-                return fs.promises.writeFile(filePath, buffer);
-            })
-        );
-
-        // Process videos
-        const videoBuffers = productVideos.map(file => file.buffer);
-
-        // Save videos to disk
-        await Promise.all(
-            videoBuffers.map((buffer, index) => {
-                const filePath = path.join(__dirname, `./videos/product_video_${randomNum}_${index}.mp4`);
-                return fs.promises.writeFile(filePath, buffer);
+        // Process and upload videos to Vimeo
+        const videoUrls = await Promise.all(
+            productVideos.map(async (file) => {
+                console.log('Uploading video file:', file); // Log each video file
+                const videoUri = await uploadVideoToVimeo(file.buffer, 'Product Video');
+                return `https://vimeo.com${videoUri}`;
             })
         );
 
         // Combine all images and videos into a single JSON object
         const mediaData = JSON.stringify({
-            images: imageBuffers.map((_, index) => `product_image_${randomNum}_${index}.jpg`),
-            videos: videoBuffers.map((_, index) => `product_video_${randomNum}_${index}.mp4`)
+            images: base64Images,
+            videos: videoUrls
         });
 
         // Determine final price
@@ -424,61 +415,7 @@ app.post('/upload-product', upload.fields([
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         `, [name, categorie, identifier, finalPrice, price_per_gram, price_per_oz, price_per_qp, price_per_half_p, price_per_1lb, mediaData, description]);
 
-        // Git operations
-        exec('git remote -v', (err, stdout, stderr) => {
-            if (err) {
-                console.error(`Error listing Git remotes: ${stderr}`);
-                return res.status(500).send('Error listing Git remotes.');
-            }
-
-            const remoteExists = stdout.includes('origin');
-
-            if (!remoteExists) {
-                exec(`git remote add origin ${gitRepoUrl}`, (err, stdout, stderr) => {
-                    if (err) {
-                        console.error(`Error adding Git remote: ${stderr}`);
-                        return res.status(500).send('Error adding Git remote.');
-                    }
-                    performGitOperations();
-                });
-            } else {
-                performGitOperations();
-            }
-        });
-
-        function performGitOperations() {
-            exec('git config --global user.name "nubmaster4568"', (err, stdout, stderr) => {
-                if (err) {
-                    console.error(`Error configuring Git user name: ${stderr}`);
-                    return res.status(500).send('Error configuring Git user name.');
-                }
-                exec('git config --global user.email "excapitalhold@icloud.com"', (err, stdout, stderr) => {
-                    if (err) {
-                        console.error(`Error configuring Git user email: ${stderr}`);
-                        return res.status(500).send('Error configuring Git user email.');
-                    }
-                    exec('git add .', (err, stdout, stderr) => {
-                        if (err) {
-                            console.error(`Error adding files: ${stderr}`);
-                            return res.status(500).send('Error adding files to Git.');
-                        }
-                        exec('git commit -m "Automated commit from server: product upload"', (err, stdout, stderr) => {
-                            if (err) {
-                                console.error(`Error committing files: ${stderr}`);
-                                return res.status(500).send('Error committing files to Git.');
-                            }
-                            exec('git push origin main', (err, stdout, stderr) => {
-                                if (err) {
-                                    console.error(`Error pushing to repository: ${stderr}`);
-                                    return res.status(500).send('Error pushing to Git repository.');
-                                }
-                                res.send('Product successfully uploaded and changes committed.');
-                            });
-                        });
-                    });
-                });
-            });
-        }
+        res.send('Product successfully uploaded and changes committed.');
     } catch (err) {
         console.error('Error processing or inserting data:', err.message);
         res.status(500).send('Error saving product.');
