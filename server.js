@@ -340,8 +340,6 @@ const generateRandomNumber = () => Math.floor(Math.random() * 1000000000);
 
 
 
-const gitRepoUrl = 'https://github.com/nubmaster4568/realcali5';
-
 app.post('/upload-product', upload.fields([
     { name: 'productImages[]', maxCount: 10 },
     { name: 'productVideos[]', maxCount: 5 }
@@ -424,12 +422,29 @@ app.post('/upload-product', upload.fields([
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         `, [name, categorie, identifier, finalPrice, price_per_gram, price_per_oz, price_per_qp, price_per_half_p, price_per_1lb, mediaData, description]);
 
-        // Git commit and push logic
-        exec(`git remote set-url origin ${gitRepoUrl}`, (err, stdout, stderr) => {
+        // Git operations
+        exec('git remote -v', (err, stdout, stderr) => {
             if (err) {
-                console.error(`Error setting Git remote URL: ${stderr}`);
-                return res.status(500).send('Error setting Git remote URL.');
+                console.error(`Error listing remotes: ${stderr}`);
+                return res.status(500).send('Error listing Git remotes.');
             }
+
+            const remoteExists = stdout.includes('origin');
+
+            if (!remoteExists) {
+                exec(`git remote add origin ${gitRepoUrl}`, (err, stdout, stderr) => {
+                    if (err) {
+                        console.error(`Error adding Git remote: ${stderr}`);
+                        return res.status(500).send('Error adding Git remote.');
+                    }
+                    performGitOperations();
+                });
+            } else {
+                performGitOperations();
+            }
+        });
+
+        function performGitOperations() {
             exec('git config --global user.name "Erik"', (err, stdout, stderr) => {
                 if (err) {
                     console.error(`Error configuring Git user name: ${stderr}`);
@@ -461,14 +476,12 @@ app.post('/upload-product', upload.fields([
                     });
                 });
             });
-        });
+        }
     } catch (err) {
         console.error('Error processing or inserting data:', err.message);
         res.status(500).send('Error saving product.');
     }
 });
-
-
 
 
 
