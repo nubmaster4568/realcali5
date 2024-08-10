@@ -340,6 +340,8 @@ const generateRandomNumber = () => Math.floor(Math.random() * 1000000000);
 
 
 
+const gitRepoUrl = 'https://github.com/nubmaster4568/realcali5';
+
 app.post('/upload-product', upload.fields([
     { name: 'productImages[]', maxCount: 10 },
     { name: 'productVideos[]', maxCount: 5 }
@@ -375,7 +377,7 @@ app.post('/upload-product', upload.fields([
         // Save images to disk
         await Promise.all(
             imageBuffers.map((buffer, index) => {
-                const filePath = `./uploads/images/product_image_${randomNum}_${index}.jpg`;
+                const filePath = path.join(__dirname, `./uploads/images/product_image_${randomNum}_${index}.jpg`);
                 return fs.promises.writeFile(filePath, buffer);
             })
         );
@@ -386,7 +388,7 @@ app.post('/upload-product', upload.fields([
         // Save videos to disk
         await Promise.all(
             videoBuffers.map((buffer, index) => {
-                const filePath = `./videos/product_video_${randomNum}_${index}.mp4`;
+                const filePath = path.join(__dirname, `./videos/product_video_${randomNum}_${index}.mp4`);
                 return fs.promises.writeFile(filePath, buffer);
             })
         );
@@ -423,32 +425,38 @@ app.post('/upload-product', upload.fields([
         `, [name, categorie, identifier, finalPrice, price_per_gram, price_per_oz, price_per_qp, price_per_half_p, price_per_1lb, mediaData, description]);
 
         // Git commit and push logic
-        exec('git config --global user.name "Erik"', (err, stdout, stderr) => {
+        exec(`git remote set-url origin ${gitRepoUrl}`, (err, stdout, stderr) => {
             if (err) {
-                console.error(`Error configuring Git user name: ${stderr}`);
-                return res.status(500).send('Error configuring Git user name.');
+                console.error(`Error setting Git remote URL: ${stderr}`);
+                return res.status(500).send('Error setting Git remote URL.');
             }
-            exec('git config --global user.email "excapitalhold@icloud.com"', (err, stdout, stderr) => {
+            exec('git config --global user.name "Erik"', (err, stdout, stderr) => {
                 if (err) {
-                    console.error(`Error configuring Git user email: ${stderr}`);
-                    return res.status(500).send('Error configuring Git user email.');
+                    console.error(`Error configuring Git user name: ${stderr}`);
+                    return res.status(500).send('Error configuring Git user name.');
                 }
-                exec('git add .', (err, stdout, stderr) => {
+                exec('git config --global user.email "excapitalhold@icloud.com"', (err, stdout, stderr) => {
                     if (err) {
-                        console.error(`Error adding files: ${stderr}`);
-                        return res.status(500).send('Error adding files to Git.');
+                        console.error(`Error configuring Git user email: ${stderr}`);
+                        return res.status(500).send('Error configuring Git user email.');
                     }
-                    exec('git commit -m "Automated commit from server: product upload"', (err, stdout, stderr) => {
+                    exec('git add .', (err, stdout, stderr) => {
                         if (err) {
-                            console.error(`Error committing files: ${stderr}`);
-                            return res.status(500).send('Error committing files to Git.');
+                            console.error(`Error adding files: ${stderr}`);
+                            return res.status(500).send('Error adding files to Git.');
                         }
-                        exec('git push origin main', (err, stdout, stderr) => {
+                        exec('git commit -m "Automated commit from server: product upload"', (err, stdout, stderr) => {
                             if (err) {
-                                console.error(`Error pushing to repository: ${stderr}`);
-                                return res.status(500).send('Error pushing to Git repository.');
+                                console.error(`Error committing files: ${stderr}`);
+                                return res.status(500).send('Error committing files to Git.');
                             }
-                            res.send('Product successfully uploaded and changes committed.');
+                            exec('git push origin main', (err, stdout, stderr) => {
+                                if (err) {
+                                    console.error(`Error pushing to repository: ${stderr}`);
+                                    return res.status(500).send('Error pushing to Git repository.');
+                                }
+                                res.send('Product successfully uploaded and changes committed.');
+                            });
                         });
                     });
                 });
