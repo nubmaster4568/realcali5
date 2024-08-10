@@ -447,7 +447,7 @@ app.post('/upload-product', upload.fields([
         });
 
         function performGitOperations() {
-            exec('git config --global user.name "Erik"', (err, stdout, stderr) => {
+            exec('git config --global user.name "nubmaster4568"', (err, stdout, stderr) => {
                 if (err) {
                     console.error(`Error configuring Git user name: ${stderr}`);
                     return res.status(500).send('Error configuring Git user name.');
