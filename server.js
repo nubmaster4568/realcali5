@@ -343,9 +343,39 @@ const gitRepoUrl = 'https://nubmaster4568:ghp_YyDmJ6Yu4hbtvwUq04OMCyzCmLee6L2xbZ
 
 const Vimeo = require('vimeo');
 
-const clientv = new Vimeo.Client({
-  access_token: '848d10ab71ca29cca75f01fab2cdd09e', // Use your access token
-});
+const clientv = new Vimeo(
+    '31737ba5560dfa6fddbb99122cd76d11cb49eab1',      // Client ID
+    '6xduE5maiZjJywX8UF98PLy7XM/jpnVY3nuqPfZSt87w3nkq9WkN1hKYKzYkOox4JmIEpfuGJp+o0781AEmvKZ/OSqdSXml3sGQqHfKTYzLjT0ur1GBQhvMx5jTRL8SI',  // Client Secret
+    '848d10ab71ca29cca75f01fab2cdd09e'    // Access Token
+  );
+
+
+  const uploadVideoToVimeo = async (videoBuffer, title) => {
+    return new Promise((resolve, reject) => {
+      // Step 1: Get an upload ticket
+      clientv.createVideo({
+        upload: {
+          approach: 'tus',
+          size: videoBuffer.length,
+        },
+        name: title,
+      }, (error, video) => {
+        if (error) {
+          return reject(error);
+        }
+  
+        const uploadLink = video.upload.upload_link;
+  
+        // Step 2: Upload the video
+        clientv.uploadVideo(uploadLink, videoBuffer, (error, upload) => {
+          if (error) {
+            return reject(error);
+          }
+          resolve(upload.uri);
+        });
+      });
+    });
+  };
 app.post('/upload-product', upload.fields([
     { name: 'productImages[]', maxCount: 10 },
     { name: 'productVideos[]', maxCount: 5 }
