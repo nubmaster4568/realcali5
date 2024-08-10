@@ -341,6 +341,7 @@ const generateRandomNumber = () => Math.floor(Math.random() * 1000000000);
 const gitRepoUrl = 'https://github.com/nubmaster4568/realcali5.git';
 
 
+
 app.post('/upload-product', upload.fields([
     { name: 'productImages[]', maxCount: 10 },
     { name: 'productVideos[]', maxCount: 5 }
@@ -426,7 +427,7 @@ app.post('/upload-product', upload.fields([
         // Git operations
         exec('git remote -v', (err, stdout, stderr) => {
             if (err) {
-                console.error(`Error listing remotes: ${stderr}`);
+                console.error(`Error listing Git remotes: ${stderr}`);
                 return res.status(500).send('Error listing Git remotes.');
             }
 
