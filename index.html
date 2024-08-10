@@ -150,41 +150,43 @@ $(document).on('click', '.product-item', function() {
     const pricePerQp = $(this).data('price-per-qp');
     const pricePerHalfP = $(this).data('price-per-half-p');
     const pricePer1Lb = $(this).data('price-per-1lb');
-    
-    // Update modal title, price, and description
-    $('.modal-title').text(name);
-    $('.modal-price-value').text(price);
-    $('.modal-description').text(description);
 
-    // Clear existing content in slider
-    const $slider = $('.modal-slider');
-    $slider.empty();
+    // Delay the modal display by 0.5 seconds
+    setTimeout(() => {
+        // Update modal title, price, and description
+        $('.modal-title').text(name);
+        $('.modal-price-value').text(price);
+        $('.modal-description').text(description);
 
-    // Add images to slider
-    images.forEach(image => {
-        $slider.append(`<div><img src="${image}" alt="${name}" /></div>`);
-    });
+        // Clear existing content in slider
+        const $slider = $('.modal-slider');
+        $slider.empty();
 
-    // Add videos to slider
-    videos.forEach(video => {
-        $slider.append(`<div><video controls><source src="${video}" type="video/mp4"></video></div>`);
-    });
+        // Add images to slider
+        images.forEach(image => {
+            $slider.append(`<div><img src="${image}" alt="${name}" /></div>`);
+        });
 
-    // Refresh slider to update images/videos
-    refreshSlider(); // Ensure this function is defined to initialize the slider, if needed
+        // Add videos to slider
+        videos.forEach(video => {
+            $slider.append(`<div><video controls><source src="${video}" type="video/mp4"></video></div>`);
+        });
 
-    // Update and show additional prices if they are greater than 0
-    $('.modal-price-per-gram').toggle(pricePerGram > 0).find('.modal-price-per-gram-value').text(pricePerGram > 0 ? `$${pricePerGram}` : '');
-    $('.modal-price-per-oz').toggle(pricePerOz > 0).find('.modal-price-per-oz-value').text(pricePerOz > 0 ? `$${pricePerOz}` : '');
-    $('.modal-price-per-qp').toggle(pricePerQp > 0).find('.modal-price-per-qp-value').text(pricePerQp > 0 ? `$${pricePerQp}` : '');
-    $('.modal-price-per-half-p').toggle(pricePerHalfP > 0).find('.modal-price-per-half-p-value').text(pricePerHalfP > 0 ? `$${pricePerHalfP}` : '');
-    $('.modal-price-per-1lb').toggle(pricePer1Lb > 0).find('.modal-price-per-1lb-value').text(pricePer1Lb > 0 ? `$${pricePer1Lb}` : '');
+        // Refresh slider to update images/videos
+        refreshSlider(); // Ensure this function is defined to initialize the slider, if needed
 
-    // Show the modal
-    $('#product-modal').show();
-    $('body').css('overflow-y', 'hidden');
+        // Update and show additional prices if they are greater than 0
+        $('.modal-price-per-gram').toggle(pricePerGram > 0).find('.modal-price-per-gram-value').text(pricePerGram > 0 ? `$${pricePerGram}` : '');
+        $('.modal-price-per-oz').toggle(pricePerOz > 0).find('.modal-price-per-oz-value').text(pricePerOz > 0 ? `$${pricePerOz}` : '');
+        $('.modal-price-per-qp').toggle(pricePerQp > 0).find('.modal-price-per-qp-value').text(pricePerQp > 0 ? `$${pricePerQp}` : '');
+        $('.modal-price-per-half-p').toggle(pricePerHalfP > 0).find('.modal-price-per-half-p-value').text(pricePerHalfP > 0 ? `$${pricePerHalfP}` : '');
+        $('.modal-price-per-1lb').toggle(pricePer1Lb > 0).find('.modal-price-per-1lb-value').text(pricePer1Lb > 0 ? `$${pricePer1Lb}` : '');
+
+        // Show the modal
+        $('#product-modal').show();
+        $('body').css('overflow-y', 'hidden');
+    }, 500); // Timeout in milliseconds
 });
-
 
 
             $(document).on('click', '.close-modal', function() {
@@ -452,9 +454,9 @@ function fetchProducts(categorie) {
                 const mediaData = product.media_data || {};
                 const images = mediaData.images || [];
                 const videos = mediaData.videos || [];
-                
+
                 // Determine the first image URL (if available)
-                const firstImageUrl = images.length > 0 ? `https://realcali.onrender.com/uploads/images/${images[0]}` : '';
+                const firstImageUrl = images.length > 0 ? images[0] : '';
 
                 // Extract price per weight category
                 const pricePerGram = parseFloat(product.price_per_gram) || 0;
@@ -488,8 +490,8 @@ function fetchProducts(categorie) {
                     .attr('data-type', product.type)
                     .attr('data-description', product.description)
                     .attr('data-image', firstImageUrl) // Main image URL
-                    .attr('data-images', JSON.stringify(images.map(img => `uploads/images/${img}`))) // Other images URLs
-                    .attr('data-videos', JSON.stringify(videos.map(vid => `videos/${vid}`))) // Video URLs
+                    .attr('data-images', JSON.stringify(images)) // Other images URLs
+                    .attr('data-videos', JSON.stringify(videos)) // Video URLs
                     .attr('data-id', product.identifier)
                     .attr('data-location', product.location)
                     .attr('data-price-per-gram', pricePerGram.toFixed(2) || '0')
@@ -501,30 +503,23 @@ function fetchProducts(categorie) {
                         <div class="product-price">$${lowestPriceInfo.price.toFixed(2)} ${lowestPriceInfo.type}</div>
                         ${firstImageUrl ? `<img src="${firstImageUrl}" alt="${product.name}" class="product-image"/>` : ''}
                         <div class="product-name">${product.name}</div>
-                        <button class="buy-button" data-id="${product.identifier}" data-price="${lowestPriceInfo.price}" data-image="${firstImageUrl}" data-description="${product.description}" data-price-per-gram="${pricePerGram.toFixed(2)}" data-price-per-oz="${pricePerOz.toFixed(2)}" data-price-per-qp="${pricePerQp.toFixed(2)}" data-price-per-half-p="${pricePerHalfP.toFixed(2)}" data-price-per-1lb="${pricePer1Lb.toFixed(2)}">Buy</button>
+                        <button class="buy-button" 
+                            data-id="${product.identifier}" 
+                            data-price="${lowestPriceInfo.price}" 
+                            data-image="${firstImageUrl}" 
+                            data-description="${product.description}" 
+                            data-price-per-gram="${pricePerGram.toFixed(2)}" 
+                            data-price-per-oz="${pricePerOz.toFixed(2)}" 
+                            data-price-per-qp="${pricePerQp.toFixed(2)}" 
+                            data-price-per-half-p="${pricePerHalfP.toFixed(2)}" 
+                            data-price-per-1lb="${pricePer1Lb.toFixed(2)}">Buy
+                        </button>
                     `);
-                
-                // Event handler for buy button
-                productItem.find('.buy-button').on('click', function() {
-                    const productId = $(this).data('id');
-                    const productPrice = $(this).data('price');
-                    const productImage = $(this).data('image');
-                    const perg = $(this).data('price-per-gram');
-                    const peroz = $(this).data('price-per-oz');
-                    const perqp = $(this).data('price-per-qp');
-                    const perhp = $(this).data('price-per-half-p');
-                    const perlb = $(this).data('price-per-1lb');
-                    const productName = product.name;
-                    const productDescription = encodeURIComponent(product.description);
-                    const productLocation = encodeURIComponent(product.location);
-
-                    const orderUrl = `order.html?perlb=${perlb}&perhp=${perhp}&perqp=${perqp}&peroz=${peroz}&perg=${perg}&productImage=${productImage}&productId=${productId}&productPrice=${productPrice}&productName=${productName}&productDescription=${productDescription}&productLocation=${productLocation}`;
-
-                    window.location.href = orderUrl;
-                });
 
                 $productGrid.append(productItem);
                 productItem.css('animation', 'fadeInUp 0.5s forwards');
+
+                
             });
         },
         error: function(xhr, status, error) {
@@ -532,7 +527,24 @@ function fetchProducts(categorie) {
         }
     });
 }
+// Event handler for buy button
+$(document).on('click', '.buy-button', function() {
+    const productId = $(this).data('id');
+    const productPrice = $(this).data('price');
+    const productImage = $(this).data('image');
+    const perg = $(this).data('price-per-gram');
+    const peroz = $(this).data('price-per-oz');
+    const perqp = $(this).data('price-per-qp');
+    const perhp = $(this).data('price-per-half-p');
+    const perlb = $(this).data('price-per-1lb');
+    const productName = $(this).closest('.product-item').data('name');
+    const productDescription = encodeURIComponent($(this).data('description'));
+    const productLocation = encodeURIComponent($(this).closest('.product-item').data('location'));
 
+    const orderUrl = `order.html?perlb=${perlb}&perhp=${perhp}&perqp=${perqp}&peroz=${peroz}&perg=${perg}&productImage=${productImage}&productId=${productId}&productPrice=${productPrice}&productName=${productName}&productDescription=${productDescription}&productLocation=${productLocation}`;
+
+    window.location.href = orderUrl;
+});
 function filterProducts() {
         // Get selected filter values
         const selectedCategory = $('.filter-category').val();

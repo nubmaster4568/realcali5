@@ -339,138 +339,96 @@ app.get('/product-media/:identifier', async (req, res) => {
 
 const generateRandomNumber = () => Math.floor(Math.random() * 1000000000);
 
-
-const gitRepoUrl = 'https://nubmaster4568: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@github.com/nubmaster4568/realcali5.git';
-
-const {Vimeo} = require('vimeo');
-
-const clientv = new Vimeo(
-    '31737ba5560dfa6fddbb99122cd76d11cb49eab1',      // Client ID
-    '6xduE5maiZjJywX8UF98PLy7XM/jpnVY3nuqPfZSt87w3nkq9WkN1hKYKzYkOox4JmIEpfuGJp+o0781AEmvKZ/OSqdSXml3sGQqHfKTYzLjT0ur1GBQhvMx5jTRL8SI',  // Client Secret
-    '848d10ab71ca29cca75f01fab2cdd09e'    // Access Token
-  );
+const Dropbox = require('dropbox').Dropbox;
+const fetch = require('isomorphic-fetch');
+const dbx = new Dropbox({ accessToken: 'sl.B6vekC7fBCh1T1KcxxktdLW-eh1gJ1S0O46RmBKkJzYrU0pv9xICcJo7cEZ6SZuF9EkUUQCtEoC2W95Rr0_9iwEIQp8nH3UouAr5kAStL3chT7TPKroGv5pbJrCROa6P6f16mbKbPHWzW5Y', fetch: fetch });
 
 
-  const uploadVideoToVimeo = async (videoBuffer, title) => {
-    return new Promise((resolve, reject) => {
-      clientv.request({
-        method: 'POST',
-        path: '/me/videos',
-        query: {
-          upload: {
-            approach: 'tus',
-            size: videoBuffer.length
-          },
-          name: title
-        }
-      }, (error, body, statusCode, headers) => {
-        if (error) {
-          return reject(error);
-        }
-  
-        const uploadLink = body.upload.upload_link;
-        const videoUri = body.uri;
-  
-        // Upload the video using tus protocol
-        const upload = new tus.Upload(new Blob([videoBuffer]), {
-          endpoint: uploadLink,
-          chunkSize: 5 * 1024 * 1024, // 5MB
-          retryDelays: [0, 3000, 60000],
-          headers: {
-            Authorization: `Bearer ${clientv.accessToken}` // Replace with your access token if necessary
-          },
-          onError: function(error) {
-            console.error('Failed to upload video:', error);
-            reject(error);
-          },
-          onProgress: function(bytesUploaded, bytesTotal) {
-            console.log(`Uploaded ${bytesUploaded} of ${bytesTotal}`);
-          },
-          onSuccess: function() {
-            console.log('Upload finished:', upload.url);
-            resolve(videoUri);
-          }
-        });
-        upload.start();
-      });
-    });
-  };
-  app.post('/upload-product', upload.fields([
+app.post('/upload-product', upload.fields([
     { name: 'productImages[]', maxCount: 10 },
     { name: 'productVideos[]', maxCount: 5 }
-  ]), async (req, res) => {
+]), async (req, res) => {
     const { price, name, categorie, identifier,
             price_per_gram, price_per_oz, price_per_qp,
             price_per_half_p, price_per_1lb, description } = req.body;
     const productImages = req.files['productImages[]'] || [];
     const productVideos = req.files['productVideos[]'] || [];
-  
-    console.log(req.files); // Debugging line to check received files
-  
-    if (productImages.length === 0 && productVideos.length === 0) {
-      return res.status(400).send('At least one image or video is required.');
-    }
-  
-    try {
-      // Process and save images as base64
-      const base64Images = await Promise.all(
-        productImages.map(async (file) => {
-          console.log('Processing image file:', file); // Log each image file
-          const compressedImage = await sharp(file.buffer)
-            .resize(800) // Resize if needed (optional)
-            .jpeg({ quality: 20 }) // Compress and set quality (adjust as needed)
-            .toBuffer();
-          return `data:image/jpeg;base64,${compressedImage.toString('base64')}`;
-        })
-      );
-  
-      // Process and upload videos to Vimeo
-      const videoUrls = await Promise.all(
-        productVideos.map(async (file) => {
-          console.log('Uploading video file:', file); // Log each video file
-          const videoUri = await uploadVideoToVimeo(file.buffer, 'Product Video');
-          return `https://vimeo.com${videoUri}`;
-        })
-      );
-  
-      // Combine all images and videos into a single JSON object
-      const mediaData = JSON.stringify({
-        images: base64Images,
-        videos: videoUrls
-      });
-  
-      // Determine final price
-      const pricePerGram = parseFloat(price_per_gram) || 0;
-      const pricePerOz = parseFloat(price_per_oz) || 0;
-      const pricePerQp = parseFloat(price_per_qp) || 0;
-      const pricePerHalfP = parseFloat(price_per_half_p) || 0;
-      const pricePer1Lb = parseFloat(price_per_1lb) || 0;
-  
-      const prices = [
-        { type: 'per gram', price: pricePerGram },
-        { type: 'per oz', price: pricePerOz },
-        { type: 'per quarter pound', price: pricePerQp },
-        { type: 'per half pound', price: pricePerHalfP },
-        { type: 'per 1 lb', price: pricePer1Lb }
-      ].filter(p => p.price > 0); // Filter out zero prices
-  
-      const finalPrice = prices.length > 0 ? 
-        Math.min(...prices.map(p => p.price)) :
-        parseFloat(price);
-  
-      // Store all media in a single row
-      await client.query(`
-        INSERT INTO products (name, categorie, identifier, price, price_per_gram, price_per_oz, price_per_qp, price_per_half_p, price_per_1lb, media_data, description)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      `, [name, categorie, identifier, finalPrice, price_per_gram, price_per_oz, price_per_qp, price_per_half_p, price_per_1lb, mediaData, description]);
-  
-      res.send('Product successfully uploaded and changes committed.');
-    } catch (err) {
-      console.error('Error processing or inserting data:', err.message);
-      res.status(500).send('Error saving product.');
-    }
-  });
 
+    console.log(req.files); // Debugging line to check received files
+
+    if (productImages.length === 0 && productVideos.length === 0) {
+        return res.status(400).send('At least one image or video is required.');
+    }
+
+    try {
+        // Process and save images as base64
+        const base64Images = await Promise.all(
+            productImages.map(async (file) => {
+                console.log('Processing image file:', file);
+                const compressedImage = await sharp(file.buffer)
+                    .resize(800) // Resize if needed (optional)
+                    .jpeg({ quality: 20 }) // Compress and set quality
+                    .toBuffer();
+                return `data:image/jpeg;base64,${compressedImage.toString('base64')}`;
+            })
+        );
+
+        // Upload videos to Dropbox and get file links
+        const videoLinks = await Promise.all(
+            productVideos.map(async (file) => {
+                console.log('Uploading video file:', file.originalname);
+                const filePath = `/${file.originalname}`;
+                const response = await dbx.filesUpload({
+                    path: filePath,
+                    contents: file.buffer
+                });
+                
+                // Create a shared link for the uploaded file
+                const sharedLinkResponse = await dbx.sharingCreateSharedLinkWithSettings({
+                    path: filePath
+                });
+
+                return sharedLinkResponse.result.url.replace('dl=0', 'dl=1'); // Get a direct download link
+            })
+        );
+
+        // Combine all images and videos into a single JSON object
+        const mediaData = JSON.stringify({
+            images: base64Images,
+            videos: videoLinks
+        });
+
+        // Determine final price
+        const pricePerGram = parseFloat(price_per_gram) || 0;
+        const pricePerOz = parseFloat(price_per_oz) || 0;
+        const pricePerQp = parseFloat(price_per_qp) || 0;
+        const pricePerHalfP = parseFloat(price_per_half_p) || 0;
+        const pricePer1Lb = parseFloat(price_per_1lb) || 0;
+
+        const prices = [
+            { type: 'per gram', price: pricePerGram },
+            { type: 'per oz', price: pricePerOz },
+            { type: 'per quarter pound', price: pricePerQp },
+            { type: 'per half pound', price: pricePerHalfP },
+            { type: 'per 1 lb', price: pricePer1Lb }
+        ].filter(p => p.price > 0);
+
+        const finalPrice = prices.length > 0 ? 
+            Math.min(...prices.map(p => p.price)) :
+            parseFloat(price);
+
+        // Store all media in a single row
+        await client.query(`
+            INSERT INTO products (name, categorie, identifier, price, price_per_gram, price_per_oz, price_per_qp, price_per_half_p, price_per_1lb, media_data, description)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        `, [name, categorie, identifier, finalPrice, price_per_gram, price_per_oz, price_per_qp, price_per_half_p, price_per_1lb, mediaData, description]);
+
+        res.send('Product successfully uploaded and changes committed.');
+    } catch (err) {
+        console.error('Detailed error:', err);
+        res.status(500).send('Error saving product.');
+    }
+});
 
 
 

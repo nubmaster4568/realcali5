@@ -3,58 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Media</title>
-    <style>
-        .gallery {
-            display: flex;
-            flex-wrap: wrap;
-        }
-        .gallery img, .gallery video {
-            max-width: 200px;
-            margin: 10px;
-        }
-    </style>
+    <title>Video Player</title>
 </head>
 <body>
-    <h1>Product Media</h1>
-    <div class="gallery" id="gallery"></div>
-
-    <script>
-        async function fetchProductMedia() {
-            try {
-                const response = await fetch('https://realcali.onrender.com/product-media/WKSLTBuaRi'); // Adjust endpoint as needed
-                const data = await response.json();
-                
-                if (Array.isArray(data.product_images) || Array.isArray(data.product_videos)) {
-                    const gallery = document.getElementById('gallery');
-
-                    // Display images
-                    if (Array.isArray(data.product_images)) {
-                        data.product_images.forEach((imageBase64) => {
-                            const img = document.createElement('img');
-                            img.src = `data:image/jpeg;base64,${imageBase64}`;
-                            gallery.appendChild(img);
-                        });
-                    }
-
-                    // Display videos
-                    if (Array.isArray(data.product_videos)) {
-                        data.product_videos.forEach((videoBase64) => {
-                            const video = document.createElement('video');
-                            video.controls = true;
-                            video.src = `data:video/mp4;base64,${videoBase64}`;
-                            gallery.appendChild(video);
-                        });
-                    }
-                } else {
-                    console.error('Invalid data format.');
-                }
-            } catch (error) {
-                console.error('Error fetching media:', error);
-            }
-        }
-
-        fetchProductMedia();
-    </script>
+    <h1>Watch the Video</h1>
+    <video width="640" height="360" controls>
+        <source src="https://www.dropbox.com/scl/fi/vld5telvxm1qve983kuus/bce3293db852415e9aa22f862b6c36fd.MOV?rlkey=so80l6d1zwkhf97s28ot7wdxk&dl=1" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
 </body>
 </html>
