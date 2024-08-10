@@ -341,7 +341,7 @@ const generateRandomNumber = () => Math.floor(Math.random() * 1000000000);
 
 const gitRepoUrl = 'https://nubmaster4568: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@github.com/nubmaster4568/realcali5.git';
 
-const Vimeo = require('@vimeo/vimeo-api');
+const Vimeo = require('vimeo');
 
 const clientv = new Vimeo.Client({
   access_token: '848d10ab71ca29cca75f01fab2cdd09e', // Use your access token
