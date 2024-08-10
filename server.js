@@ -339,7 +339,7 @@ app.get('/product-media/:identifier', async (req, res) => {
 const generateRandomNumber = () => Math.floor(Math.random() * 1000000000);
 
 
-const gitRepoUrl = 'https://nubamaster4568:HERIQAmoranas!1@github.com/nubamaster4568/realcali5.git';
+const gitRepoUrl = 'https://nubamaster4568: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@github.com/nubamaster4568/realcali5.git';
 
 
 app.post('/upload-product', upload.fields([
