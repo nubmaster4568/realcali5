@@ -16,7 +16,7 @@
     "pg": "*",
     "sharp": "*",
     "telegraf": "*",
-    "@vimeo/vimeo-api": "^1.2.0"
+    "vimeo": "^1.2.0"
   },
   "devDependencies": {
     "sqlite3": "*"
