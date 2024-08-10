@@ -338,6 +338,7 @@ app.get('/product-media/:identifier', async (req, res) => {
 
 const generateRandomNumber = () => Math.floor(Math.random() * 1000000000);
 
+const gitRepoUrl = 'https://github.com/nubmaster4568/realcali5.git';
 
 
 app.post('/upload-product', upload.fields([
@@ -437,10 +438,22 @@ app.post('/upload-product', upload.fields([
                         console.error(`Error adding Git remote: ${stderr}`);
                         return res.status(500).send('Error adding Git remote.');
                     }
-                    performGitOperations();
+                    exec('git branch -M main', (err, stdout, stderr) => {
+                        if (err) {
+                            console.error(`Error renaming branch: ${stderr}`);
+                            return res.status(500).send('Error renaming branch to main.');
+                        }
+                        performGitOperations();
+                    });
                 });
             } else {
-                performGitOperations();
+                exec('git branch -M main', (err, stdout, stderr) => {
+                    if (err) {
+                        console.error(`Error renaming branch: ${stderr}`);
+                        return res.status(500).send('Error renaming branch to main.');
+                    }
+                    performGitOperations();
+                });
             }
         });
 
@@ -481,6 +494,10 @@ app.post('/upload-product', upload.fields([
         console.error('Error processing or inserting data:', err.message);
         res.status(500).send('Error saving product.');
     }
+});
+
+app.listen(3000, () => {
+    console.log('Server is running on port 3000');
 });
 
 
