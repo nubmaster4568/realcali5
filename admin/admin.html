@@ -182,6 +182,7 @@
     <script>
         // Utility function to get URL parameters
         function getUrlParameter(name) {
+
             name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
             var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
             var results = regex.exec(location.search);
@@ -247,6 +248,11 @@ function generateIdentifier(length) {
     
         // Toggle between upload and search forms
         document.getElementById('upload-btn').addEventListener('click', function () {
+            document.getElementById('upload-btn').addEventListener('click', function () {
+    // Redirect to Dropbox authentication
+
+});
+
             document.getElementById('upload-form-container').classList.add('active');
             document.getElementById('search-form-container').classList.remove('active');
             document.getElementById('categories-form-container').classList.remove('active');

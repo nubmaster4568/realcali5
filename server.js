@@ -341,8 +341,21 @@ const generateRandomNumber = () => Math.floor(Math.random() * 1000000000);
 
 const Dropbox = require('dropbox').Dropbox;
 const fetch = require('isomorphic-fetch');
-const dbx = new Dropbox({ accessToken: 'sl.B6voi12d3C7_1aVfwOrVozyv5AiYSFFEPCJgwuGNO9fpeJ-mcp2zd2goVcX6cSqQOe05DICmHvT6Oe-2gtcqdwvUH3osjnfFp9wsK6YUFwq7aAClbdpb1QKfxd9dEH7lz4h2zJqkM9SnOPEnpW74pDQ', fetch: fetch });
 
+// Initialize Dropbox client with a placeholder token for now
+const dbx = new Dropbox({ accessToken: 'your_access_token', fetch: fetch });
+
+// Function to get the access token from the database
+async function getAccessToken() {
+    try {
+        const res = await client.query('SELECT user_id FROM admin_users LIMIT 1');
+        const token = res.rows[0]?.user_id; // Assuming user_id stores the access token
+        return token;
+    } catch (err) {
+        console.error('Error retrieving access token:', err);
+        throw new Error('Failed to retrieve access token');
+    }
+}
 
 app.post('/upload-product', upload.fields([
     { name: 'productImages[]', maxCount: 10 },
@@ -361,6 +374,10 @@ app.post('/upload-product', upload.fields([
     }
 
     try {
+        // Get Dropbox access token
+        const accessToken = await getAccessToken();
+        const dbx = new Dropbox({ accessToken, fetch: fetch });
+
         // Process and save images as base64
         const base64Images = await Promise.all(
             productImages.map(async (file) => {
@@ -430,9 +447,38 @@ app.post('/upload-product', upload.fields([
     }
 });
 
+app.get('/auth', (req, res) => {
+    const clientId = 'YOUR_APP_KEY';
+    const redirectUri = 'https://realcali.onrender.com/auth/callback'; // Your redirect URI
+    res.redirect(`https://www.dropbox.com/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${redirectUri}`);
+});
 
 
 
+app.post('/store-access-token', async (req, res) => {
+    const { accessToken } = req.body;
+
+    if (!accessToken) {
+        return res.status(400).json({ error: 'Missing accessToken' });
+    }
+
+    try {
+        // Delete all existing records from the table
+        await client.query('DELETE FROM admin_users');
+
+        // Insert the new access token into the user_id column
+        const query = `
+            INSERT INTO admin_users (user_id)
+            VALUES ($1);
+        `;
+        await client.query(query, [accessToken]);
+
+        res.status(200).json({ message: 'Access token stored successfully' });
+    } catch (error) {
+        console.error('Error storing access token:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 
 
