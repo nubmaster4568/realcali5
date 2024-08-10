@@ -16,7 +16,8 @@
     "pg": "*",
     "sharp": "*",
     "telegraf": "*",
-    "vimeo": "^1.2.0"
+    "vimeo": "^1.2.0",
+    "tus-js-client": "^2.3.0"
   },
   "devDependencies": {
     "sqlite3": "*"
