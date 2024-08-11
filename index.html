@@ -143,7 +143,10 @@ $(document).on('click', '.product-item', function() {
     const description = $(this).data('description');
     const images = JSON.parse($(this).attr('data-images') || '[]');
     const videos = JSON.parse($(this).attr('data-videos') || '[]');
-    
+        const convertToStreamingUrl = (url) => {
+      return url.replace(/dl=1$/, 'raw=1');
+    };
+
     // Extract additional prices
     const pricePerGram = $(this).data('price-per-gram');
     const pricePerOz = $(this).data('price-per-oz');
@@ -169,7 +172,9 @@ $(document).on('click', '.product-item', function() {
 
         // Add videos to slider
         videos.forEach(video => {
-            $slider.append(`<div><video controls><source src="${video}" type="video/mp4"></video></div>`);
+            const streamingUrl = convertToStreamingUrl(video);
+
+            $slider.append(`<div><video controls><source src="${streamingUrl}" type="video/mp4"></video></div>`);
         });
 
         // Refresh slider to update images/videos
